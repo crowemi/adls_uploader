@@ -1,0 +1,8 @@
+{
+    "adls_settings" : {
+        "container" : "medispan_drug",
+        "file_to_folder": true
+    },
+    "directory" : "C:\\azcopy\\medispan\\"
+
+}

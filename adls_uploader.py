@@ -1,46 +1,40 @@
-import os, uuid 
+import os, uuid, py_linq, json
 from azure.storage.blob import BlobServiceClient, BlobClient, ContainerClient
 
-try: 
-
-    ### Configuration 
-    container_name = "shpo-integration-application"
-    upload_file_path = f"C:/azcopy/logs"
-
-    ###
-
-    print("PyUploader Start.")
-    conn = os.getenv("azure_storage_connection_string")
-    client = BlobServiceClient.from_connection_string(conn)
-
-
-    container_list = client.list_containers()
-    container_names = [] 
-
-    # get container names
-    for container in container_list:
-        container_names.append(container.name)
-
-    # check if container exists
-    if container_name in container_names:
-        print(f"PyUploader: Container {container_name} already exists.")
-    else:
-        client.create_container("shpo-integration-application")
-        print(f"PyUploader: Create container {container_name}")
+class AdlsUploader:
     
-    files_to_upload = os.listdir(upload_file_path)
+    def __init__( self, config_path, config_file_name ):
+        
+        print (f'AdlsUploader.Initialize: Start.')
+        print (f'AdlsUploader.Initialize: config_path: {config_path}.')
+        print (f'AdlsUploader.Initialize: config_file_name: {config_file_name}.')
+        
+        with open(os.path.join(config_path, config_file_name), "rb") as file:
+            try: 
+                self.config = json.loads(file.read())
+                self.client = BlobServiceClient.from_connection_string(os.getenv("azure_storage_connection_string"))
+            except Exception as ex: 
+                print(f'AdlsUploader.Initialize: Failed loading {config_path}/{config_file_name}.')
 
-    for file in files_to_upload:
-        with open(os.path.join(upload_file_path, file), "rb") as data: 
-            client.get_blob_client(container=container_name, blob=file).upload_blob(data)
-            print(f"PyUploader: Uploaded {container_name}/{file}")
+        print (f'AdlsUploader.Initialize: End.')
 
-    
+    def create_container(self, container_name):
 
+        if container_name is None:
+            container_name = self.config["adls_settings"]["container"]
 
+        container_list = self.client.list_containers()
+        container_names = [] 
 
-    print("PyUploader End.")
+        # get container names
+        for container in container_list:
+            container_names.append(container.name)
 
-except Exception as ex: 
-    print('Exception:')
-    print(ex)
+        # check if container exists
+        if container_name in container_names:
+            print(f"adls-uploader: Container {container_name} already exists.")
+        else:
+            self.client.create_container(container_name)
+            print(f"adls-uploader: Create container {container_name}")
+
+        
