@@ -21,7 +21,7 @@ class AdlsUploader:
     def create_client(self):
 
         try:
-            return BlobServiceClient.from_connection_string("blob_connection_string")
+            return BlobServiceClient.from_connection_string("blob_storage_connection_string")
         except Exception as ex:
             print (f'AdlsUploader.create_client: {ex}')
 
@@ -75,7 +75,7 @@ class AdlsUploader:
                 with open(os.path.join(self.config['directory'], file), "rb") as data: 
                     upload_path = file + f"/{file}_{datetime.datetime.now()}"
                     client.get_blob_client(container=self.config['adls_settings']['container'], blob=upload_path).upload_blob(data)
-                    print(f"adls-uploader: Uploaded {upload_path}") 
+                    print(f"AdlsUploader.upload_files: Uploaded {upload_path}") 
         else: 
             print (f'')
 
